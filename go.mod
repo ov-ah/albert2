@@ -3,7 +3,9 @@ module albert2
 go 1.27.3
 
 require (
+	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
