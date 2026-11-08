@@ -22,6 +22,11 @@ func quit(args []string) error {
 	return errQuit
 }
 
+func RegisterCommand(command string, funct func(args []string) error) error{
+	commands[command] = funct
+	return nil
+}
+
 func Init() (*readline.Instance, error) {
 	rl, err := readline.New("albert2> ")
 	if err != nil {	panic(err) }
