@@ -16,6 +16,9 @@ import (
 var path_root = "https://api.spacetraders.io/v2"
 var client = &http.Client{Timeout: 10 * time.Second}
 var reset_date = ""
+var auth string
+
+func SetAuth (t string) { auth = t }
 
 func Pretty(s string) string {
 	var buf bytes.Buffer
@@ -32,7 +35,7 @@ func Get(ctx context.Context, path string) (string, error) {
 	}
 
 	req.Header.Set("Content-type", "application/json")
-	// TODO: add auth header
+	req.Header.Set("Authorization", "Bearer "+auth)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -42,7 +45,7 @@ func Get(ctx context.Context, path string) (string, error) {
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 
-	conn, err := db.OpenDB(ctx, "db/temp.db") // TODO: update db path
+	conn, err := db.OpenDB(ctx, "db/logs.db")
 	if err != nil {
 		log.Fatal("GET->db:", err)
 		return "", err
@@ -67,7 +70,7 @@ func Post(ctx context.Context, path string, reqBody map[string]any) (string, err
 	}
 
 	req.Header.Set("Content-type", "application/json")
-	// TODO: add auth header
+	req.Header.Set("Authorization", "Bearer "+auth)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -77,7 +80,7 @@ func Post(ctx context.Context, path string, reqBody map[string]any) (string, err
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 
-	conn, err := db.OpenDB(ctx, "db/temp.db") // TODO: update db path
+	conn, err := db.OpenDB(ctx, "db/logs.db")
 	if err != nil {
 		log.Fatal("POST->db:", err)
 		return "", err
@@ -119,7 +122,7 @@ func Init(ctx context.Context) error {
 			return nil
 		}
 		m := make(map[string]any)
-		if len(args) < 2 {
+		if len(args) > 2 {
 			for i := 1; i+1 < len(args); i += 2 {
 				m[args[i]] = args[i+1]
 			}
