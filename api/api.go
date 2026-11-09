@@ -93,7 +93,7 @@ func Post(ctx context.Context, path string, reqBody map[string]any) (string, err
 func Init(ctx context.Context) error {
 	reset_body, err := Get(ctx, "")
 	if err != nil {
-		log.Fatal("Space Traders API is donw")
+		log.Fatal("Space Traders API is down")
 		return nil
 	}
 	var reset_resp StatusResponse
