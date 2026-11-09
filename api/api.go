@@ -27,7 +27,7 @@ func Pretty(s string) string {
 func Get(ctx context.Context, path string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", path_root+path, nil)
 	if err != nil {
-		log.Fatal("Get:", err)
+		log.Fatal("GET:", err)
 	}
 
 	req.Header.Set("Content-type", "application/json")
@@ -46,9 +46,44 @@ func Get(ctx context.Context, path string) (string, error) {
 		log.Fatal("GET->db:", err)
 		return "", err
 	}
-	db.LogRequest(ctx, conn, "", string(resp.Request.Method), path_root+path, resp.StatusCode, "", string(body))
+	err = db.LogRequest(ctx, conn, "", string(resp.Request.Method), path_root+path, resp.StatusCode, "", string(body))
 	if err != nil {
 		log.Fatal("GET->db:", err)
+		return "", err
+	}
+	return string(body), nil
+}
+
+func Post(ctx context.Context, path string, reqBody map[string]any) (string, error) {
+	data, err := json.Marshal(reqBody)
+	if err != nil {
+		log.Fatal("POST:", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", path_root+path, bytes.NewReader(data))
+	if err != nil {
+		log.Fatal("POST:", err)
+	}
+
+	req.Header.Set("Content-type", "application/json")
+	// TODO: add auth header
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Fatal("POST:", err)
+		return "", err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+
+	conn, err := db.OpenDB(ctx, "db/temp.db") // TODO: update db path
+	if err != nil {
+		log.Fatal("POST->db:", err)
+		return "", err
+	}
+	err = db.LogRequest(ctx, conn, "", string(resp.Request.Method), path_root+path, resp.StatusCode, string(data), string(body))
+	if err != nil {
+		log.Fatal("POST->db:", err)
 		return "", err
 	}
 	return string(body), nil
