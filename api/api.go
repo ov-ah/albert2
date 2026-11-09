@@ -17,7 +17,12 @@ var path_root = "https://api.spacetraders.io/v2"
 func Get(ctx context.Context, path string) (string, error) {
 	reqCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
+
 	req, err := http.NewRequestWithContext(reqCtx, "GET", path_root+path, nil)
+	if err != nil {
+		log.Fatal("Get:", err)
+	}
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal("GET:", err)
