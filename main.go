@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		log.Fatal("POST->db:", err)
 	}
-	token, err := db.GetAuth(ctx, conn)
+	token, err := db.GetAuth(ctx, conn, api.Reset_date)
 	if err != nil { panic(err) }
 	api.SetAuth(token)
 	api.Init(ctx)

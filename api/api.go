@@ -15,7 +15,7 @@ import (
 
 var path_root = "https://api.spacetraders.io/v2"
 var client = &http.Client{Timeout: 10 * time.Second}
-var reset_date = ""
+var Reset_date = ""
 var auth string
 
 func SetAuth (t string) { auth = t }
@@ -50,7 +50,7 @@ func Get(ctx context.Context, path string) (string, error) {
 		log.Fatal("GET->db:", err)
 		return "", err
 	}
-	err = db.LogRequest(ctx, conn, reset_date, string(resp.Request.Method), path_root+path, resp.StatusCode, "", string(body))
+	err = db.LogRequest(ctx, conn, Reset_date, string(resp.Request.Method), path_root+path, resp.StatusCode, "", string(body))
 	if err != nil {
 		log.Fatal("GET->db:", err)
 		return "", err
@@ -85,7 +85,7 @@ func Post(ctx context.Context, path string, reqBody map[string]any) (string, err
 		log.Fatal("POST->db:", err)
 		return "", err
 	}
-	err = db.LogRequest(ctx, conn, reset_date, string(resp.Request.Method), path_root+path, resp.StatusCode, string(data), string(body))
+	err = db.LogRequest(ctx, conn, Reset_date, string(resp.Request.Method), path_root+path, resp.StatusCode, string(data), string(body))
 	if err != nil {
 		log.Fatal("POST->db:", err)
 		return "", err
@@ -101,7 +101,7 @@ func Init(ctx context.Context) error {
 	}
 	var reset_resp StatusResponse
 	json.Unmarshal([]byte(reset_body), &reset_resp)
-	reset_date = reset_resp.ResetDate
+	Reset_date = reset_resp.ResetDate
 
 	cli.RegisterCommand("get", func(args []string) error {
 		if len(args) != 1 {
@@ -133,6 +133,35 @@ func Init(ctx context.Context) error {
 		}
 		log.Println(Pretty(out))
 		return nil
+	})
+
+	cli.RegisterCommand("register", func(args[]string) error {
+		if len(args) != 2 {
+			log.Println("usage: register <name> <faction>")
+			return nil
+		}
+		m := map[string]any {
+			"symbol": args[0],
+			"faction": args[1],
+		}
+
+		conn, err := db.OpenDB(ctx, "db/logs.db")
+		if err != nil {
+			log.Fatal("GET->db:", err)
+			return err
+		}
+		deleted, err := db.ClearAuth(ctx, conn, Reset_date)
+		log.Printf("%d stale accounts deleted\n", deleted)
+
+		_, err = Post(ctx, "/register", m)
+		if err != nil {
+			return err
+		}
+		log.Println("Registration complete!")
+		log.Println("Name:", args[0])
+		log.Println("Faction:", args[1])
+
+		return err
 	})
 
 	return nil

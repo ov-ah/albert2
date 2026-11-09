@@ -50,13 +50,31 @@ func LogRequest(ctx context.Context, conn *sql.DB, resetDate, method string, pat
 	return err
 }
 
-func GetAuth(ctx context.Context, conn *sql.DB) (string, error) {
+func GetAuth(ctx context.Context, conn *sql.DB, resetDate string) (string, error) {
 	var auth string
 	err := conn.QueryRowContext(ctx, `
 	SELECT json_extract(response_body, '$.data.token')
 	FROM api_log
-	WHERE path LIKE '%/register' AND status = 201
-	ORDER BY id DESC LIMIT 1`).Scan(&auth)
+	WHERE path LIKE '%/register' 
+		AND status = 201
+		AND reset_date IS NOT ?
+	ORDER BY id DESC LIMIT 1`, resetDate).Scan(&auth)
 
 	return auth, err
+}
+
+func ClearAuth(ctx context.Context, conn *sql.DB, resetDate string) (int64, error) {
+	res, err := conn.ExecContext(ctx, `
+		UPDATE api_log
+		SET response_body = json_remove(response_body, '$.data.token')
+		WHERE path LIKE '%/register'
+			AND reset_date IS NOT ?
+		  	AND json_valid(response_body)
+		  	AND json_extract(response_body, '$.data.token') IS NOT NULL`,
+		resetDate)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.RowsAffected()
 }
