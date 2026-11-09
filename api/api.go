@@ -13,17 +13,18 @@ import (
 )
 
 var path_root = "https://api.spacetraders.io/v2"
+var client = &http.Client{Timeout: 10 * time.Second}
 
 func Get(ctx context.Context, path string) (string, error) {
-	reqCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
-	defer cancel()
-
-	req, err := http.NewRequestWithContext(reqCtx, "GET", path_root+path, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", path_root+path, nil)
 	if err != nil {
 		log.Fatal("Get:", err)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	req.Header.Set("Content-type", "application/json")
+	// TODO: add auth header
+
+	resp, err := client.Do(req)
 	if err != nil {
 		log.Fatal("GET:", err)
 		return "", err
@@ -31,12 +32,12 @@ func Get(ctx context.Context, path string) (string, error) {
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 
-	conn, err := db.OpenDB(reqCtx, "db/temp.db") // TODO: update db path
+	conn, err := db.OpenDB(ctx, "db/temp.db") // TODO: update db path
 	if err != nil {
 		log.Fatal("GET->db:", err)
 		return "", err
 	}
-	db.LogRequest(reqCtx, conn, "", string(resp.Request.Method), path_root+path, resp.StatusCode, "", string(body))
+	db.LogRequest(ctx, conn, "", string(resp.Request.Method), path_root+path, resp.StatusCode, "", string(body))
 	if err != nil {
 		log.Fatal("GET->db:", err)
 		return "", err

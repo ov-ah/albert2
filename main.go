@@ -14,7 +14,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	api.Init(ctx)	
+	api.Init(ctx)
 
 	rl, err := cli.Init()
 	if err != nil { panic(err) }
