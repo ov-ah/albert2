@@ -100,7 +100,26 @@ func Init(ctx context.Context) error {
 			return err
 		}
 		log.Println(Pretty(out))
+	})
+
+	cli.RegisterCommand("post", func(args []string) error {
+		if len(args) < 1 {
+			log.Println("usage: post <path> <body>(optional)")
+			return nil
+		}
+		m := make(map[string]any)
+		if len(args) < 2 {
+			for i := 1; i+1 < len(args); i += 2 {
+				m[args[i]] = args[i+1]
+			}
+		}
+		out, err := Post(ctx, args[0], m)
+		if err != nil {
+			return err
+		}
+		log.Println(Pretty(out))
 		return nil
 	})
+
 	return nil
 }
