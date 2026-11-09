@@ -4,9 +4,10 @@ import (
 	"context"
 	"net/http"
 	"io"
-	// "encoding/json"
+	"encoding/json"
 	"log"
 	"time"
+	"bytes"
 
 	"albert2/db"
 	"albert2/cli"
@@ -14,6 +15,14 @@ import (
 
 var path_root = "https://api.spacetraders.io/v2"
 var client = &http.Client{Timeout: 10 * time.Second}
+
+func Pretty(s string) string {
+	var buf bytes.Buffer
+	if err := json.Indent(&buf, []byte(s), "", " "); err != nil {
+		return s
+	}
+	return buf.String()
+}
 
 func Get(ctx context.Context, path string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, "GET", path_root+path, nil)
@@ -55,7 +64,7 @@ func Init(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		log.Println(out)
+		log.Println(Pretty(out))
 		return nil
 	})
 	return nil
