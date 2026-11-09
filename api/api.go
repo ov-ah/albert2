@@ -15,6 +15,7 @@ import (
 
 var path_root = "https://api.spacetraders.io/v2"
 var client = &http.Client{Timeout: 10 * time.Second}
+var reset_date = ""
 
 func Pretty(s string) string {
 	var buf bytes.Buffer
@@ -46,7 +47,7 @@ func Get(ctx context.Context, path string) (string, error) {
 		log.Fatal("GET->db:", err)
 		return "", err
 	}
-	err = db.LogRequest(ctx, conn, "", string(resp.Request.Method), path_root+path, resp.StatusCode, "", string(body))
+	err = db.LogRequest(ctx, conn, reset_date, string(resp.Request.Method), path_root+path, resp.StatusCode, "", string(body))
 	if err != nil {
 		log.Fatal("GET->db:", err)
 		return "", err
@@ -81,7 +82,7 @@ func Post(ctx context.Context, path string, reqBody map[string]any) (string, err
 		log.Fatal("POST->db:", err)
 		return "", err
 	}
-	err = db.LogRequest(ctx, conn, "", string(resp.Request.Method), path_root+path, resp.StatusCode, string(data), string(body))
+	err = db.LogRequest(ctx, conn, reset_date, string(resp.Request.Method), path_root+path, resp.StatusCode, string(data), string(body))
 	if err != nil {
 		log.Fatal("POST->db:", err)
 		return "", err
@@ -90,6 +91,15 @@ func Post(ctx context.Context, path string, reqBody map[string]any) (string, err
 }
 
 func Init(ctx context.Context) error {
+	reset_body, err := Get(ctx, "")
+	if err != nil {
+		log.Fatal("Space Traders API is donw")
+		return nil
+	}
+	var reset_resp StatusResponse
+	json.Unmarshal([]byte(reset_body), &reset_resp)
+	reset_date = reset_resp.ResetDate
+
 	cli.RegisterCommand("get", func(args []string) error {
 		if len(args) != 1 {
 			log.Println("usage: get <path>")
@@ -100,6 +110,7 @@ func Init(ctx context.Context) error {
 			return err
 		}
 		log.Println(Pretty(out))
+		return nil
 	})
 
 	cli.RegisterCommand("post", func(args []string) error {
